@@ -25,3 +25,4 @@ def fetch_data(url: str, params: dict) -> dict | None:
         print(f"Nastala chyba: {e}")
     except ValueError:
         print("Odpověď není validní JSON")
+    return None
