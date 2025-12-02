@@ -1,9 +1,10 @@
 import plotly.express as px
 import pandas as pd
 from config import MONTH_NAMES, CITY_COLORS
+import plotly.graph_objs as go
 
 
-def plot_monthly_sunshine(df_monthly_data: pd.DataFrame) -> object:
+def plot_monthly_sunshine(df_monthly_data: pd.DataFrame) -> go.Figure:
     """ Creates a clear bar chart showing the monthly average daily sunshine duration for each city.
 
     Parameters: DataFrame containing the following columns: 'month', 'city' and 'mean_sunshine_duration'.
