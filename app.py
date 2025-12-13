@@ -8,6 +8,10 @@ df_data_plzen = get_city_data("Plzeň")
 df_data = prepare_weather_data([df_data_brno, df_data_plzen])
 df_monthly_data = get_monthly_averages(df_data)
 
+if df_monthly_data.empty:
+    st.error("Nepodařilo se načíst nebo zpracovat data.")
+    st.stop()
+
 st.markdown("""
 
             # Porovnání počasí v Brně a v Plzni
