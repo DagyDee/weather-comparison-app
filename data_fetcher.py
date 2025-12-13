@@ -1,5 +1,11 @@
 import requests
 
+import logging
+from utils import setup_logger
+
+setup_logger()
+logger = logging.getLogger(__name__)
+
 def fetch_data(url: str, params: dict) -> dict | None:
     """Fetches weather data from the specified API endpoint 
     and parses the JSON response into a Python dictionary."""

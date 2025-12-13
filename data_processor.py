@@ -2,6 +2,11 @@ import pandas as pd
 from data_fetcher import fetch_data
 from config import API_URL, CITY_PARAMS
 
+import logging
+from utils import setup_logger
+
+setup_logger()
+logger = logging.getLogger(__name__)
 
 def get_city_data(city: str) -> pd.DataFrame:
     """Retrieves and transforms hourly or daily weather data
