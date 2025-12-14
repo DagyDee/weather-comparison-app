@@ -13,17 +13,17 @@ def get_city_data(city: str) -> pd.DataFrame:
     for a given city into a structured pandas DataFrame."""
     
     if city not in CITY_PARAMS:
-        print(f"Parametry pro město '{city}' nejsou nadefinované")
+        logger.warning("Parametry pro město '%s' nejsou nadefinované", city)
         return pd.DataFrame()
     
     response = fetch_data(API_URL, CITY_PARAMS[city])
     if not response:
-        print("Nedodány data ke zpracování")
+        logger.error("Nedodány data ke zpracování")
         return pd.DataFrame()
 
     data = response.get("hourly") or response.get("daily")
     if not data:
-        print("API neobsahuje žádná hourly/daily data")
+        logger.error("API neobsahuje žádná hourly/daily data")
         return pd.DataFrame()
     
     df = pd.DataFrame(data)
@@ -39,7 +39,7 @@ def prepare_weather_data(df_list: list[pd.DataFrame]) -> pd.DataFrame:
     Returns: Combined and cleaned DataFrame with unified formats."""
 
     if any(df.empty for df in df_list):
-        print("Nedostupná data – přeskakuji zpracování")
+        logger.warning("Některá vstupní data jsou prázdná – zpracování přerušeno")
         return pd.DataFrame()
     
     df_data = pd.concat(df_list)  # sloučení dataframů pod sebe
@@ -48,7 +48,7 @@ def prepare_weather_data(df_list: list[pd.DataFrame]) -> pd.DataFrame:
         df_data["time"] = pd.to_datetime(df_data["time"])  # převod formátu na datum
         df_data["sunshine_duration"] = df_data["sunshine_duration"] / 3600  # převod sec -> hod
     except KeyError as e:
-        print(f"Nenačten očekávaný sloupec: {e}")
+        logger.exception("V datech chybí očekávaný sloupec")
         return pd.DataFrame()
 
     return df_data
@@ -64,7 +64,7 @@ def get_monthly_averages(df_data: pd.DataFrame) -> pd.DataFrame:
     daily sunshine duration for each month. Suitable for visualization."""
 
     if df_data.empty:
-        print("DataFrame pro měsíční průměry je prázdný.")
+        logger.warning("Vstupní DataFrame pro měsíční průměry je prázdný")
         return pd.DataFrame()
     
     try:
@@ -79,7 +79,7 @@ def get_monthly_averages(df_data: pd.DataFrame) -> pd.DataFrame:
             )
         return df_monthly_data
     
-    except KeyError as e:
-        print(f"Chybí sloupec ke zprůměrování: {e}")
+    except KeyError:
+        logger.exception("Chybí sloupec potřebný pro výpočet měsíčních průměrů")
     
     return pd.DataFrame()
