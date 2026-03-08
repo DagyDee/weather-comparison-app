@@ -15,13 +15,13 @@ def plot_monthly_sunshine(df_monthly_data: pd.DataFrame) -> go.Figure:
 
     fig = px.bar(df_monthly_data, 
                  x="month_name", 
-                 y="mean_sunshine_duration", 
+                 y="sunshine_duration", 
                  color="city", 
                  barmode="group",
                  color_discrete_map=CITY_COLORS,
                  title="Měsíční průměr denní délky slunečního svitu",
                  labels={"month_name": "Měsíc",
-                         "mean_sunshine_duration": "Průměrná doba denního svitu (h)",
+                         "sunshine_duration": "Průměrná doba denního svitu (h)",
                          "city": "Město"}
                 )
     fig.update_xaxes(

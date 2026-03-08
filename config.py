@@ -10,8 +10,20 @@ METRICS = {
         "api_name": "sunshine_duration",
         "unit_divider": 3600,  # sec → hod
         "aggregation": "mean",
-        "label": "Průměrná doba denního svitu (h)",
-        "title": "Měsíční průměr denní délky slunečního svitu"}
+        "label": "Sluneční svit (h)",
+        "title": "Průměrná denní doba slunečního svitu podle měsíců"},
+    "precipitation_sum": {
+        "api_name": "precipitation_sum",
+        "unit_divider": None,  # mm
+        "aggregation": "mean",
+        "label": "Srážky (mm)",
+        "title": "Průměrné denní množství srážek podle měsíců"},
+    "precipitation_hours": {
+        "api_name": "precipitation_hours",
+        "unit_divider": None,  # hod
+        "aggregation": "mean",
+        "label": "Doba se srážkami (h)",
+        "title": "Průměrná denní doba se srážkami podle měsíců"},
     }   
 
 DEFAULT_PARAMS = {
