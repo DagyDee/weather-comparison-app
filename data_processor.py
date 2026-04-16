@@ -5,26 +5,37 @@ from config import API_URL, CITY_PARAMS, METRICS
 import logging
 from utils import setup_logger
 
+from validators import (
+    validate_city,
+    validate_response,
+    validate_weather_data,
+    validate_dataframe_not_empty,
+    validate_column_exists,
+    validate_datetime_column,
+    validate_time_column_ready,
+    validate_metric_for_processing,
+    validate_required_columns,
+    validate_unit_divider,
+    validate_aggregation
+)
+
 setup_logger()
 logger = logging.getLogger(__name__)
 
 ALLOWED_AGGREGATIONS = {"mean", "sum", "min", "max"}
 
 def get_city_data(city: str) -> pd.DataFrame:
-    """Fetches hourly or daily weather data for a given city and returns it as a DataFrame."""
+    """Fetch hourly or daily weather data for a given city and returns it as a DataFrame."""
     
-    if city not in CITY_PARAMS:
-        logger.warning("Parametry pro město '%s' nejsou nadefinované", city)
+    if not validate_city(city, CITY_PARAMS):
         return pd.DataFrame()
     
     response = fetch_data(API_URL, CITY_PARAMS[city])
-    if not response:
-        logger.error("Nebyla dodána žádná data ke zpracování.")
+    if not validate_response(response):
         return pd.DataFrame()
 
     data = response.get("hourly") or response.get("daily")
-    if not data:
-        logger.error("API neobsahuje žádná hourly/daily data")
+    if not validate_weather_data(data):
         return pd.DataFrame()
     
     df = pd.DataFrame(data)
@@ -38,7 +49,7 @@ def merge_dataframes(df_list: list[pd.DataFrame]) -> pd.DataFrame:
     Parameters: df_list (list[pd.DataFrame]): List of DataFrames for individual cities.
     Returns: pd.DataFrame: Unified DataFrame or empty DataFrame if no valid data provided."""
     
-    valid_dfs = [df for df in df_list if not df.empty]
+    valid_dfs = [df for df in df_list if validate_dataframe_not_empty(df, "merge_dataframes")]
     if not valid_dfs:
         logger.warning("Všechna vstupní data jsou prázdná – zpracování přerušeno")
         return pd.DataFrame()
@@ -52,15 +63,13 @@ def ensure_datetime(df: pd.DataFrame, column: str = "time") -> pd.DataFrame:
         column (str): Column name to convert to datetime.
     Returns: DataFrame with converted datetime column or empty DataFrame if validation fails."""
 
-    if column not in df.columns:
-        logger.warning("Sloupec '%s' není v DataFrame.", column)
+    if not validate_column_exists(df, column):
         return pd.DataFrame()
     
     df_copy = df.copy()
     df_copy[column] = pd.to_datetime(df_copy[column], errors="coerce")
     
-    if df_copy[column].isna().any():
-        logger.warning("Sloupec '%s' obsahuje neplatné hodnoty datetime.", column)
+    if not validate_datetime_column(df_copy, column):
         return pd.DataFrame()
     return df_copy
 
@@ -72,16 +81,7 @@ def add_month_column(df: pd.DataFrame, column: str = "time") -> pd.DataFrame:
         column (str): Name of the datetime column.
     Returns: DataFrame with added 'month' column or empty DataFrame if validation fails."""
 
-    if df.empty:
-        logger.warning("Vstupní DataFrame je prázdný.")
-        return pd.DataFrame()
-
-    if column not in df.columns:
-        logger.warning("Sloupec '%s' není v DataFrame.", column)
-        return pd.DataFrame()
-
-    if not pd.api.types.is_datetime64_any_dtype(df[column]):
-        logger.warning("Sloupec '%s' není typu datetime.", column)
+    if not validate_time_column_ready(df, column):
         return pd.DataFrame()
     
     df_copy = df.copy()
@@ -97,20 +97,7 @@ def apply_unit_conversion(df: pd.DataFrame, metric: str) -> pd.DataFrame:
         metric (str): Metric name corresponding to a column in the DataFrame and a key in the METRICS configuration.
     Returns: DataFrame with converted metric values or empty DataFrame if validation fails."""
     
-    if df.empty:
-        logger.warning("Vstupní DataFrame pro přepočet jednotek je prázdný")
-        return pd.DataFrame()
-    
-    if metric not in METRICS:
-        logger.error("Neznámá metrika: %s", metric)
-        return pd.DataFrame()
-
-    if metric not in df.columns:
-        logger.error("Sloupec %s chybí v datech", metric)
-        return pd.DataFrame()
-    
-    if not pd.api.types.is_numeric_dtype(df[metric]):
-        logger.error("Sloupec '%s' musí mít číselnou hodnotu.", metric)
+    if not validate_metric_for_processing(df, metric, f"apply_unit_conversion:{metric}"):
         return pd.DataFrame()
     
     df_copy = df.copy()
@@ -120,8 +107,7 @@ def apply_unit_conversion(df: pd.DataFrame, metric: str) -> pd.DataFrame:
     if unit_divider is None:
         return df_copy
 
-    if unit_divider == 0:
-        logger.error("unit_divider pro metriku '%s' nesmí být 0", metric)
+    if not validate_unit_divider(unit_divider, metric):
         return pd.DataFrame()
 
     df_copy[metric] = df_copy[metric] / unit_divider
@@ -136,33 +122,18 @@ def aggregate_monthly(df: pd.DataFrame, metric: str) -> pd.DataFrame:
         metric (str): Metric name corresponding to a column in the DataFrame and a key in the METRICS configuration.
     Returns: Aggregated monthly values or empty DataFrame if validation fails."""
     
-    if df.empty:
-        logger.warning("Vstupní DataFrame pro agregaci je prázdný")
-        return pd.DataFrame()
-    
-    if metric not in METRICS:
-        logger.error("Neznámá metrika: %s", metric)
-        return pd.DataFrame()
-
-    if metric not in df.columns:
-        logger.error("Sloupec %s chybí v datech", metric)
-        return pd.DataFrame()
-    
-    if not pd.api.types.is_numeric_dtype(df[metric]):
-        logger.error("Sloupec '%s' musí mít číselnou hodnotu.", metric)
+    if not validate_metric_for_processing(df, metric, f"aggregate_monthly:{metric}"):
         return pd.DataFrame()
     
     required_columns = {"city", "month"}
-    if not required_columns.issubset(df.columns):
-        logger.error("Chybí povinné sloupce pro agregaci: %s", required_columns)
+    if not validate_required_columns(df, required_columns):
         return pd.DataFrame()
 
     df_copy = df.copy()
     metric_config = METRICS[metric]
     agg_type = metric_config.get("aggregation")
 
-    if agg_type not in ALLOWED_AGGREGATIONS:
-        logger.error(f"Nepodporovaná agregace: {agg_type}")
+    if not validate_aggregation(agg_type, ALLOWED_AGGREGATIONS):
         return pd.DataFrame()
 
     return (
