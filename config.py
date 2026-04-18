@@ -5,6 +5,8 @@ API_URL = "https://historical-forecast-api.open-meteo.com/v1/forecast"
 START_DATE = "2022-01-01"
 END_DATE = datetime.now().strftime("%Y-%m-%d")
 
+DATA_KEY = "daily"
+
 METRICS = {
     "sunshine_duration": {
         "api_name": "sunshine_duration",
@@ -29,7 +31,7 @@ METRICS = {
 DEFAULT_PARAMS = {
     "start_date": START_DATE,
     "end_date": END_DATE,
-    "daily": ",".join(metric["api_name"] for metric in METRICS.values()),
+    DATA_KEY: ",".join(metric["api_name"] for metric in METRICS.values()),
     "timezone": "Europe/Berlin"
     }
 

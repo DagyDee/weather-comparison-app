@@ -1,6 +1,6 @@
 import pandas as pd
 from data_fetcher import fetch_data
-from config import API_URL, CITY_PARAMS, METRICS
+from config import API_URL, DATA_KEY, CITY_PARAMS, METRICS
 
 import logging
 from utils import setup_logger
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 ALLOWED_AGGREGATIONS = {"mean", "sum", "min", "max"}
 
 def get_city_data(city: str) -> pd.DataFrame:
-    """Fetch hourly or daily weather data for a given city and returns it as a DataFrame."""
+    """Fetch weather data for a given city based on configured DATA_KEY and returns it as a DataFrame."""
     
     if not validate_city(city, CITY_PARAMS):
         return pd.DataFrame()
@@ -34,7 +34,7 @@ def get_city_data(city: str) -> pd.DataFrame:
     if not validate_response(response):
         return pd.DataFrame()
 
-    data = response.get("hourly") or response.get("daily")
+    data = response.get(DATA_KEY)
     if not validate_weather_data(data):
         return pd.DataFrame()
     
