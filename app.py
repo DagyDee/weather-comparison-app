@@ -1,13 +1,10 @@
 import streamlit as st
 
-from data_processor import get_city_data, prepare_weather_data, get_monthly_averages
+from orchestrator import compute_monthly_metrics
 from data_visualizer import plot_monthly_sunshine
 
 with st.spinner("Načítám a zpracovávám data..."):
-    df_data_brno = get_city_data("Brno")
-    df_data_plzen = get_city_data("Plzeň")
-    df_data = prepare_weather_data([df_data_brno, df_data_plzen])
-    df_monthly_data = get_monthly_averages(df_data)
+    df_monthly_data = compute_monthly_metrics()
 
 if df_monthly_data.empty:
     st.error("Nepodařilo se načíst nebo zpracovat data.")
