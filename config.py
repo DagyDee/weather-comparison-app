@@ -5,10 +5,33 @@ API_URL = "https://historical-forecast-api.open-meteo.com/v1/forecast"
 START_DATE = "2022-01-01"
 END_DATE = datetime.now().strftime("%Y-%m-%d")
 
+DATA_KEY = "daily"
+
+METRICS = {
+    "sunshine_duration": {
+        "api_name": "sunshine_duration",
+        "unit_divider": 3600,  # sec → hod
+        "aggregation": "mean",
+        "label": "Sluneční svit (h)",
+        "title": "Průměrná denní doba slunečního svitu podle měsíců"},
+    "precipitation_sum": {
+        "api_name": "precipitation_sum",
+        "unit_divider": None,  # mm
+        "aggregation": "mean",
+        "label": "Srážky (mm)",
+        "title": "Průměrné denní množství srážek podle měsíců"},
+    "precipitation_hours": {
+        "api_name": "precipitation_hours",
+        "unit_divider": None,  # hod
+        "aggregation": "mean",
+        "label": "Doba se srážkami (h)",
+        "title": "Průměrná denní doba se srážkami podle měsíců"},
+    }   
+
 DEFAULT_PARAMS = {
     "start_date": START_DATE,
     "end_date": END_DATE,
-    "daily": "sunshine_duration",
+    DATA_KEY: ",".join(metric["api_name"] for metric in METRICS.values()),
     "timezone": "Europe/Berlin"
     }
 
